@@ -1,5 +1,9 @@
+import datetime
+
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
+from controller.dbcontroller import DbController
+from controller.odoocontroller import OdooController
 
 class LoginScreen(Screen):
 
@@ -29,7 +33,15 @@ class DissanApp(App):
 
 
 if __name__ == '__main__':
-    DissanApp().run()
+   db=DbController()
+   db.create_data_structure()
+   odoo= OdooController("sergiov_1974@hotmail.com","espinillo212215")
+
+   p=odoo.get_all_products()
+   db.load_products(p)
+#DissanApp().r
+
+   #print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 
 
