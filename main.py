@@ -1,7 +1,5 @@
-import datetime
-
-from controller.dbcontroller import DbController
-from controller.odoocontroller import OdooController
+from dissan.src.dissan.controller import DbController
+from dissan.src.dissan.controller.odoocontroller import OdooController
 
 
 

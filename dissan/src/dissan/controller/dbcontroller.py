@@ -3,7 +3,7 @@ from sqlite3 import Error
 
 class DbController():
     __conn= None
-    def __init__(self, db="data/dissandb.db"):
+    def __init__(self, db="E:\PycharmProjects\DissanPortablePy\dissan\src\dissan\data\dissandb.db"):
         try:
             self.__conn= sqlite3.connect(db)
         except Error as e:
@@ -32,5 +32,7 @@ class DbController():
         self.__conn.executemany('INSERT OR REPLACE INTO products (id, code, name, price, date, img) VALUES (?,?,?,?,?,NULL)', sqlvalues)
         self.__conn.commit()
 
-
+    def get_products(self, offset=0,limit=40):
+        res=self.__conn.execute("SELECT * FROM products ORDER BY id LIMIT %s OFFSET %d"%(limit, offset))
+        return res.fetchall()
 
