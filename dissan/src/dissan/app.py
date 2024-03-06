@@ -22,42 +22,47 @@ class DissanDistribuidora(toga.App):
         """
         main_box = toga.Box(style=Pack(direction=COLUMN))
         self.listprice_window = toga.MainWindow(title="DISSAN - Lista de precios")
-        options=toga.Group("Opciones", order=1)
-        update=toga.Command(self.update_prices,"Actualizar lista",
-                            tooltip="Actualiza los precios con el servidor", group=options)
-        self.listprice_window.toolbar.add(update)
-        usr_label = toga.Label("Email: ", style=Pack(padding=(0, 5)))
-        self.usr=toga.TextInput(style=Pack(flex=1))
+        options = toga.Group("Opciones", order=1)
+        update = toga.Command(self.update_prices, "Actualizar lista",
+                              tooltip="Actualiza los precios con el servidor", group=options)
+        if DbController().is_first_run():
+            usr_label = toga.Label("Email: ", style=Pack(padding=(0, 5)))
+            self.usr = toga.TextInput(style=Pack(flex=1))
 
-        psw_label = toga.Label("Contraseña", style=Pack(padding=(0, 5)))
-        self.psw=toga.PasswordInput(style=Pack(flex=1))
+            psw_label = toga.Label("Contraseña", style=Pack(padding=(0, 5)))
+            self.psw = toga.PasswordInput(style=Pack(flex=1))
 
-        usr_box = toga.Box(style=Pack(direction=ROW, padding=5))
-        usr_box.add(usr_label)
-        usr_box.add(self.usr)
+            usr_box = toga.Box(style=Pack(direction=ROW, padding=5))
+            usr_box.add(usr_label)
+            usr_box.add(self.usr)
+            psw_box = toga.Box(style=Pack(direction=ROW, padding=5))
+            psw_box.add(psw_label)
+            psw_box.add(self.psw)
+            login = toga.Button("Iniciar Sesión", on_press=self.login_usr, style=Pack(padding=5))
 
-        psw_box = toga.Box(style=Pack(direction=ROW, padding=5))
-        psw_box.add(psw_label)
-        psw_box.add(self.psw)
+            main_box.add(usr_box)
+            main_box.add(psw_box)
+            main_box.add(login)
 
-        login = toga.Button("Iniciar Sesión", on_press=self.login_usr,  style=Pack(padding=5))
-
-        main_box.add(usr_box)
-        main_box.add(psw_box)
-        main_box.add(login)
-        #DbController().create_data_structure()
-        #DbController().load_products(OdooController("sergiov_1974@hotmail.com","espinillo212215").get_all_products())
+            self.main_window = toga.Window(title="DISSAN - Iniciar Sesion")
+            self.main_window.content = main_box
+            self.main_window.show()
+        else:
+            self.listpriceWindow(self)
 
 
-        self.main_window = toga.Window(title="DISSAN - Iniciar Sesion")
-        self.main_window.content = main_box
-        self.main_window.show()
+
+
     def login_usr(self, args):
-        print(self.usr.value)
-        print(self.psw.value)
-        self.listpriceWindow(self)
-
+        self.odoo=OdooController()
+        if (self.odoo.authenticate(self.usr.value,self.psw.value)):
+            DbController().save_user_data(self.usr.value,self.psw.value)
+            DbController().load_products(self.odoo.get_all_products())
+            self.listpriceWindow(self)
+        else:
+            self.main_window.info_dialog("ERROR DE USUARIO O CONTRASEÑA")
     def listpriceWindow(self, widget):
+
         main_box = toga.Box(style=Pack(direction=COLUMN))
         search_label = toga.Label("Buscar: ", style=Pack(padding=(0, 5)))
         self.search = toga.TextInput(style=Pack(flex=1), on_change=self.search_product)
@@ -67,7 +72,7 @@ class DissanDistribuidora(toga.App):
         main_box.add(search_box)
 
 
-        self.listprice=toga.Table(headings=["Codigo", "Descripcion", "Precio"], data=DbController().get_products(0,200), style=Pack(
+        self.listprice=toga.Table(headings=["Codigo", "Descripcion", "Precio"], data=DbController().get_products(0,80), style=Pack(
                 flex=1,
                 padding_right=5,
                 font_family="monospace",
@@ -85,7 +90,8 @@ class DissanDistribuidora(toga.App):
         self.listprice.data=DbController().search_product(self.search.value)
 
     def update_prices(self, args):
-        print("actualizar precios db")
+        self.odoo = OdooController()
+        self.odoo.authenticate(DbController().get_user(),DbController().get_pswd())
 
 def main():
     return DissanDistribuidora()

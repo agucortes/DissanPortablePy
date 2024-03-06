@@ -1,4 +1,5 @@
 import xmlrpc.client
+import toga
 
 class OdooController ():
 
@@ -7,7 +8,9 @@ class OdooController ():
 
     def __init__(self, user="", password=""):
         if len(user) > 0 and len(password) > 0:
-            self.authenticate(user, password)
+            return self.authenticate(user, password)
+        else:
+            return AttributeError
 
     #Connect to odoo 8 api
     def __connect(self):
@@ -41,14 +44,20 @@ class OdooController ():
         res = []
         offset = 0
         pagination = 80
+        #PROGRESS BAR FOR TOGA
+        progressbar=toga.ProgressBar(max=100, value=1)
+        progressionStep=100//count
+        progressbar.start()
         while count > 0:
             ids = self.__common.execute_kw(self.__db, self.__uid, self.__pswd, model, 'search', [filter], {'offset': offset, 'limit': pagination})
             offset += pagination
+            progressbar.value=progressionStep*offset
             res.extend(self.__common.execute_kw(self.__db, self.__uid, self.__pswd, model, 'read', [ids], fields))
             if offset > count:
                 offset -= pagination
                 pagination = count - offset
                 count = 0
+        progressbar.stop()
         return res
 
     #Get all products from database
