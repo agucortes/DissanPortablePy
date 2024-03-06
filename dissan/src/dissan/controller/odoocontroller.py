@@ -39,29 +39,31 @@ class OdooController ():
             return False
 
     #Generic get model
-    def __get_model(self, model, filter, fields):
+    def __get_model(self, model, filter, fields, progressBar=None):
         count = self.__common.execute_kw(self.__db, self.__uid, self.__pswd, model, 'search_count', [filter])
         res = []
         offset = 0
         pagination = 80
         #PROGRESS BAR FOR TOGA
-        progressbar=toga.ProgressBar(max=100, value=1)
-        progressionStep=100//count
-        progressbar.start()
+        if progressBar is not None:
+            progressionStep=100//count
+
+
         while count > 0:
             ids = self.__common.execute_kw(self.__db, self.__uid, self.__pswd, model, 'search', [filter], {'offset': offset, 'limit': pagination})
             offset += pagination
-            progressbar.value=progressionStep*offset
+            #update progressbar
+            if progressBar is not None:
+                progressBar.value=progressionStep*offset
             res.extend(self.__common.execute_kw(self.__db, self.__uid, self.__pswd, model, 'read', [ids], fields))
             if offset > count:
                 offset -= pagination
                 pagination = count - offset
                 count = 0
-        progressbar.stop()
         return res
 
     #Get all products from database
-    def get_all_products(self, with_img=False):
+    def get_all_products(self, progressBar=None, with_img=False):
         fields = {'fields': ['id', 'default_code', 'name_template', 'list_price', 'write_date']}
         if with_img:
             fields['fields'].append('image_small')
@@ -69,7 +71,7 @@ class OdooController ():
 
 
     #Get products updated from date provided
-    def get_products_to_update(self, date_from, with_img=False):
+    def get_products_to_update(self, date_from, progressBar=None, with_img=False):
 
         fields = {'fields': ['id', 'default_code', 'name_template', 'list_price', 'write_date']}
         if with_img:

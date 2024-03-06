@@ -21,34 +21,37 @@ class DissanDistribuidora(toga.App):
         show the main window.
         """
         main_box = toga.Box(style=Pack(direction=COLUMN))
-        self.listprice_window = toga.MainWindow(title="DISSAN - Lista de precios")
+        self.prices_window = toga.Window(title="DISSAN - Lista de precios")
         options = toga.Group("Opciones", order=1)
         update = toga.Command(self.update_prices, "Actualizar lista",
                               tooltip="Actualiza los precios con el servidor", group=options)
-        if DbController().is_first_run():
-            usr_label = toga.Label("Email: ", style=Pack(padding=(0, 5)))
-            self.usr = toga.TextInput(style=Pack(flex=1))
 
-            psw_label = toga.Label("Contraseña", style=Pack(padding=(0, 5)))
-            self.psw = toga.PasswordInput(style=Pack(flex=1))
 
-            usr_box = toga.Box(style=Pack(direction=ROW, padding=5))
-            usr_box.add(usr_label)
-            usr_box.add(self.usr)
-            psw_box = toga.Box(style=Pack(direction=ROW, padding=5))
-            psw_box.add(psw_label)
-            psw_box.add(self.psw)
-            login = toga.Button("Iniciar Sesión", on_press=self.login_usr, style=Pack(padding=5))
+        usr_label = toga.Label("Email: ", style=Pack(padding=(0, 5)))
+        self.usr = toga.TextInput(style=Pack(flex=1))
 
-            main_box.add(usr_box)
-            main_box.add(psw_box)
-            main_box.add(login)
+        psw_label = toga.Label("Contraseña", style=Pack(padding=(0, 5)))
+        self.psw = toga.PasswordInput(style=Pack(flex=1))
 
-            self.main_window = toga.Window(title="DISSAN - Iniciar Sesion")
-            self.main_window.content = main_box
-            self.main_window.show()
-        else:
+        usr_box = toga.Box(style=Pack(direction=ROW, padding=5))
+        usr_box.add(usr_label)
+        usr_box.add(self.usr)
+        psw_box = toga.Box(style=Pack(direction=ROW, padding=5))
+        psw_box.add(psw_label)
+        psw_box.add(self.psw)
+        login = toga.Button("Iniciar Sesión", on_press=self.login_usr, style=Pack(padding=5))
+        main_box.add(usr_box)
+        main_box.add(psw_box)
+        main_box.add(login)
+
+        self.main_window = toga.MainWindow(title="DISSAN - Iniciar Sesion")
+        self.main_window.content = main_box
+
+        if not DbController().is_first_run():
             self.listpriceWindow(self)
+        else:
+            self.main_window.show()
+
 
 
 
@@ -57,7 +60,10 @@ class DissanDistribuidora(toga.App):
         self.odoo=OdooController()
         if (self.odoo.authenticate(self.usr.value,self.psw.value)):
             DbController().save_user_data(self.usr.value,self.psw.value)
-            DbController().load_products(self.odoo.get_all_products())
+            progessBar=toga.ProgressBar(max=100, value=1)
+            progessBar.start()
+            DbController().load_products(self.odoo.get_all_products(progressBar=progessBar))
+            progessBar.stop()
             self.listpriceWindow(self)
         else:
             self.main_window.info_dialog("ERROR DE USUARIO O CONTRASEÑA")
@@ -82,16 +88,19 @@ class DissanDistribuidora(toga.App):
 
         main_box.add(self.listprice)
 
-        self.listprice_window.content = main_box
-        self.windows.add(self.listprice_window)
+        self.prices_window.content = main_box
+        self.windows.add(self.prices_window)
         self.main_window.close()
-        self.listprice_window.show()
+        self.prices_window.show()
     def search_product(self,args):
         self.listprice.data=DbController().search_product(self.search.value)
 
     def update_prices(self, args):
         self.odoo = OdooController()
-        self.odoo.authenticate(DbController().get_user(),DbController().get_pswd())
+        if(self.odoo.authenticate(DbController().get_user(),DbController().get_pswd())):
+            DbController().load_products(self.odoo.get_products_to_update(date_from=DbController().get_last_update()))
+        else:
+            self.prices_window.info_dialog("Error al autenticar el usuario")
 
 def main():
     return DissanDistribuidora()

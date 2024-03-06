@@ -3,7 +3,7 @@ from sqlite3 import Error
 
 class DbController():
     __conn= None
-    def __init__(self, db="D:\Agu\Documentos\PyProjects\DissanPortable\dissan\src\dissan\data\dissandb.db"):
+    def __init__(self, db="dissandb.db"):
         try:
             self.__conn= sqlite3.connect(db)
         except Error as e:
@@ -36,19 +36,21 @@ class DbController():
 
     def get_products(self, offset=0,limit=40):
         res=self.__conn.execute("SELECT code, name, price FROM products ORDER BY id LIMIT %s OFFSET %d"%(limit, offset))
-        self.close_connection()
         return res.fetchall()
     def search_product(self,prod, offset=0,limit=40):
         res=self.__conn.execute(f"SELECT code, name, price FROM products WHERE code LIKE '{prod}%' OR name LIKE '%{prod}%' ORDER BY id LIMIT {limit} OFFSET {offset}")
-        self.close_connection()
         return res.fetchall()
     def is_first_run(self):
-        res = self.__conn.execute("SELECT id FROM user").fetchone()
-        if res is not None:
-            return res
-        else:
+        if self.__conn.execute("SELECT name FROM sqlite_master WHERE name='user'").fetchone() is None or self.__conn.execute("SELECT id FROM user").fetchone() is None:
             self.create_data_structure()
             return True
+        else:
+            res = self.__conn.execute("SELECT id FROM user").fetchone()
+            if res is not None:
+                return False
+            else:
+                self.create_data_structure()
+                return True
 
     def save_user_data(self, mail, pswd):
         self.__conn.execute(f"INSERT INTO user(mail, password) VALUES ({mail},{pswd})")
@@ -57,10 +59,14 @@ class DbController():
 
     def get_last_update(self):
         res = self.__conn.execute("SELECT date FROM products ORDER BY date DESC").fetchone()
-        print(res)
+        print(res[0])
         return res
 
     def get_user(self):
+        res = self.__conn.execute("SELECT mail FROM user").fetchone()
+        print(res[0])
         pass
     def get_pswd(self):
+        res = self.__conn.execute("SELECT password FROM user").fetchone()
+        print(res[0])
         pass
