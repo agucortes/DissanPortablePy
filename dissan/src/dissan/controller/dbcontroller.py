@@ -3,7 +3,7 @@ from sqlite3 import Error
 
 class DbController():
     __conn= None
-    def __init__(self, db="dissandb.db"):
+    def __init__(self, db="D:\Agu\Documentos\PyProjects\DissanPortable\dissan\src\dissan\data\dissandb.db"):
         try:
             self.__conn= sqlite3.connect(db)
         except Error as e:
@@ -44,29 +44,25 @@ class DbController():
         if self.__conn.execute("SELECT name FROM sqlite_master WHERE name='user'").fetchone() is None or self.__conn.execute("SELECT id FROM user").fetchone() is None:
             self.create_data_structure()
             return True
+        elif self.__conn.execute("SELECT id FROM user").fetchone() is None:
+            self.create_data_structure()
+            return True
         else:
-            res = self.__conn.execute("SELECT id FROM user").fetchone()
-            if res is not None:
-                return False
-            else:
-                self.create_data_structure()
-                return True
+            return False
 
     def save_user_data(self, mail, pswd):
-        self.__conn.execute(f"INSERT INTO user(mail, password) VALUES ({mail},{pswd})")
+        self.__conn.execute(f"INSERT INTO user(mail, password) VALUES ('{mail}','{pswd}')")
         self.__conn.commit()
         self.close_connection()
 
     def get_last_update(self):
         res = self.__conn.execute("SELECT date FROM products ORDER BY date DESC").fetchone()
-        print(res[0])
-        return res
+        return res[0]
 
     def get_user(self):
         res = self.__conn.execute("SELECT mail FROM user").fetchone()
-        print(res[0])
-        pass
+        return res[0]
+
     def get_pswd(self):
         res = self.__conn.execute("SELECT password FROM user").fetchone()
-        print(res[0])
-        pass
+        return res[0]

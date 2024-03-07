@@ -21,11 +21,11 @@ class DissanDistribuidora(toga.App):
         show the main window.
         """
         main_box = toga.Box(style=Pack(direction=COLUMN))
-        self.prices_window = toga.Window(title="DISSAN - Lista de precios")
+        self.main_window = toga.MainWindow(title="DISSAN - Lista de precios")
         options = toga.Group("Opciones", order=1)
         update = toga.Command(self.update_prices, "Actualizar lista",
                               tooltip="Actualiza los precios con el servidor", group=options)
-
+        self.main_window.toolbar.add(update)
 
         usr_label = toga.Label("Email: ", style=Pack(padding=(0, 5)))
         self.usr = toga.TextInput(style=Pack(flex=1))
@@ -44,29 +44,33 @@ class DissanDistribuidora(toga.App):
         main_box.add(psw_box)
         main_box.add(login)
 
-        self.main_window = toga.MainWindow(title="DISSAN - Iniciar Sesion")
-        self.main_window.content = main_box
-
-        if not DbController().is_first_run():
-            self.listpriceWindow(self)
+        self.login_window = toga.Window(title="DISSAN - Iniciar Sesion")
+        self.login_window.content = main_box
+        self.windows.add(self.login_window)
+        if DbController().is_first_run():
+            self.login_window.show()
         else:
-            self.main_window.show()
+            self.listpriceWindow(self)
 
 
 
 
 
     def login_usr(self, args):
-        self.odoo=OdooController()
-        if (self.odoo.authenticate(self.usr.value,self.psw.value)):
-            DbController().save_user_data(self.usr.value,self.psw.value)
-            progessBar=toga.ProgressBar(max=100, value=1)
-            progessBar.start()
-            DbController().load_products(self.odoo.get_all_products(progressBar=progessBar))
-            progessBar.stop()
-            self.listpriceWindow(self)
-        else:
-            self.main_window.info_dialog("ERROR DE USUARIO O CONTRASEÑA")
+        self.odoo = OdooController()
+        try:
+            if self.odoo.authenticate(self.usr.value,self.psw.value):
+                DbController().save_user_data(self.usr.value, self.psw.value)
+                progessBar = toga.ProgressBar(max=100, value=1)
+                progessBar.start()
+                DbController().load_products(self.odoo.get_all_products(progressBar=progessBar))
+                progessBar.stop()
+                self.listpriceWindow(self)
+
+        except Exception as e:
+            self.main_window.info_dialog(e)
+
+
     def listpriceWindow(self, widget):
 
         main_box = toga.Box(style=Pack(direction=COLUMN))
@@ -88,10 +92,11 @@ class DissanDistribuidora(toga.App):
 
         main_box.add(self.listprice)
 
-        self.prices_window.content = main_box
-        self.windows.add(self.prices_window)
-        self.main_window.close()
-        self.prices_window.show()
+        self.main_window.content = main_box
+
+        self.main_window.show()
+        self.login_window.close()
+
     def search_product(self,args):
         self.listprice.data=DbController().search_product(self.search.value)
 
@@ -100,7 +105,7 @@ class DissanDistribuidora(toga.App):
         if(self.odoo.authenticate(DbController().get_user(),DbController().get_pswd())):
             DbController().load_products(self.odoo.get_products_to_update(date_from=DbController().get_last_update()))
         else:
-            self.prices_window.info_dialog("Error al autenticar el usuario")
+            self.main_window.info_dialog("Error al autenticar el usuario")
 
 def main():
     return DissanDistribuidora()
