@@ -1,9 +1,10 @@
 import sqlite3
 from sqlite3 import Error
 
+DB="dissandb.sqlite"
 class DbController():
     __conn= None
-    def __init__(self, db="D:\Agu\Documentos\PyProjects\DissanPortable\dissan\src\dissan\data\dissandb.db"):
+    def __init__(self, db=DB):
         try:
             self.__conn= sqlite3.connect(db)
         except Error as e:
@@ -41,6 +42,9 @@ class DbController():
         res=self.__conn.execute(f"SELECT code, name, price FROM products WHERE code LIKE '{prod}%' OR name LIKE '%{prod}%' ORDER BY id LIMIT {limit} OFFSET {offset}")
         return res.fetchall()
     def is_first_run(self):
+
+        if str(type(self.__conn)).find('NoneType') != -1:
+            self.__conn = sqlite3.connect(DB)
         if self.__conn.execute("SELECT name FROM sqlite_master WHERE name='user'").fetchone() is None or self.__conn.execute("SELECT id FROM user").fetchone() is None:
             self.create_data_structure()
             return True

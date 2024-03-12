@@ -17,7 +17,7 @@ icon = "src/dissan/resources/dissan"
 sources = [
     "src/dissan",
     "src/dissan/controller",
-    "src/dissan/models",
+
 ]
 test_sources = [
     "tests",
