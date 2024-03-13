@@ -12,7 +12,7 @@ from controller.odoocontroller import OdooController, OdooException
 class DissanDistribuidora(toga.App):
 
 
-    #odoo=OdooController("sergiov_1974@hotmail.com","espinillo212215")
+
     def startup(self):
         """Construct and show the Toga application.
 
@@ -45,7 +45,7 @@ class DissanDistribuidora(toga.App):
             main_box.add(login)
             self.error_label= toga.Label(text="", style=Pack(padding=(0, 5)))
 
-            #self.login_window = toga.Window(title="DISSAN - Iniciar Sesion")
+            
             self.main_window.title="DISSAN - Iniciar Sesion"
             self.main_window.content = main_box
             self.main_window.show()
@@ -71,7 +71,7 @@ class DissanDistribuidora(toga.App):
         except OdooException as e:
             self.error_label.text=e.get_error()
             self.main_window.content.add(self.error_label)
-            #self.login_window.info_dialog(title="ERROR", message=e.get_error())
+
 
 
     def listpriceWindow(self, widget):
@@ -118,7 +118,8 @@ class DissanDistribuidora(toga.App):
             DbController().load_products(self.odoo.get_products_to_update(date_from=DbController().get_last_update()), progessBar)
             progessBar.stop()
         else:
-            self.main_window.info_dialog("Error al autenticar el usuario")
+            pass
+            #self.main_window.info_dialog("Error al autenticar el usuario")
 
 def main():
     return DissanDistribuidora()
